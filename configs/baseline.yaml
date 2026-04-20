@@ -1,0 +1,17 @@
+# training config for fraud detection baseline
+
+experiment_name: fraud-detection-baseline
+run_name: baseline
+
+model:
+  n_estimators: 500
+  max_depth: 6
+  learning_rate: 0.05
+  early_stopping_rounds: 30
+
+split:
+  val_frac: 0.15
+  test_frac: 0.15
+
+mlflow:
+  tracking_uri: http://127.0.0.1:5000

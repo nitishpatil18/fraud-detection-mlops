@@ -1,0 +1,26 @@
+[2026-04-20 21:54:25,574][__main__][INFO] - config:
+experiment_name: fraud-detection-baseline
+run_name: baseline
+model:
+  n_estimators: 500
+  max_depth: 6
+  learning_rate: 0.05
+  early_stopping_rounds: 30
+split:
+  val_frac: 0.15
+  test_frac: 0.15
+mlflow:
+  tracking_uri: http://127.0.0.1:5000
+
+[2026-04-20 21:54:25,803][__main__][INFO] - mlflow run_id: 9ef57aab46d14794aa31c78a44108d9e
+[2026-04-20 21:54:25,811][src.data][INFO] - loading raw csvs
+[2026-04-20 21:54:32,542][src.data][INFO] - loaded shape=(590540, 434)
+[2026-04-20 21:54:36,049][src.data][INFO] - split sizes: train=413378 val=88581 test=88581
+[2026-04-20 21:54:36,051][src.data][INFO] - fraud rates: train=0.0352 val=0.0343 test=0.0348
+[2026-04-20 21:54:37,292][src.features][INFO] - feature counts: numeric=400 categorical=31
+[2026-04-20 21:54:40,024][src.features][INFO] - final shapes: train=(413378, 431) val=(88581, 431) test=(88581, 431)
+[2026-04-20 21:54:40,054][__main__][INFO] - scale_pos_weight=27.43 (pos=14538 neg=398840)
+[2026-04-20 23:28:48,602][__main__][INFO] - best iteration: 495
+[2026-04-20 23:28:49,285][__main__][INFO] - val metrics: {'pr_auc': 0.5375964918876744, 'roc_auc': 0.9047485839091018, 'recall_at_p50': 0.5170940170940171, 'recall_at_p90': 0.24589086127547666}
+[2026-04-20 23:28:49,285][__main__][INFO] - test metrics: {'pr_auc': 0.5140127991098905, 'roc_auc': 0.8896911959601674, 'recall_at_p50': 0.4690236782354849, 'recall_at_p90': 0.2607849497242945}
+[2026-04-20 23:28:51,606][__main__][INFO] - model logged to mlflow
