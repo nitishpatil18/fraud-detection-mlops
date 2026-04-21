@@ -1,3 +1,6 @@
+**live demo**: https://fraud-api-5dxn.onrender.com/docs
+**health**: https://fraud-api-5dxn.onrender.com/health
+
 # fraud detection mlops
 
 [![ci](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/ci.yml)
