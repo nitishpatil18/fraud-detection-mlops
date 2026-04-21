@@ -1,22 +1,29 @@
-# fraud detection api image
-FROM python:3.11-slim
+# fraud detection api image, with model baked in.
+# build locally with:
+#   MODEL_RUN_ID=<run_id> python -m scripts.export_model
+#   docker build -t fraud-api:latest .
+
+FROM python:3.11-slim AS base
 
 WORKDIR /app
 
-# install system deps needed for xgboost
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# install python deps (separate layer for better caching)
+# install python deps (cached layer)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy source code
 COPY src/ ./src/
 
-# api config via env (overridable at `docker run` time)
-ENV MLFLOW_TRACKING_URI=http://host.docker.internal:5000 \
+# copy the pre-exported model artifacts.
+# must run `python -m scripts.export_model` with MODEL_RUN_ID set before docker build.
+COPY build/model/ ./model/
+
+# runtime env
+ENV MODEL_LOCAL_DIR=/app/model \
     DECISION_THRESHOLD=0.5 \
     PYTHONUNBUFFERED=1
 

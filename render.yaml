@@ -1,0 +1,20 @@
+# render.com deployment config.
+# on push to main, render rebuilds from the Dockerfile and redeploys.
+# postgres is managed separately (already created).
+
+services:
+  - type: web
+    name: fraud-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # set manually in dashboard, contains password
+      - key: DECISION_THRESHOLD
+        value: "0.5"
+      - key: MODEL_LOCAL_DIR
+        value: /app/model
