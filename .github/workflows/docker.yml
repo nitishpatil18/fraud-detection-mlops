@@ -3,7 +3,7 @@ name: docker
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # lets you trigger manually from the actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,6 +21,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: Dockerfile.ci
           push: false
           tags: fraud-api:ci
           cache-from: type=gha
