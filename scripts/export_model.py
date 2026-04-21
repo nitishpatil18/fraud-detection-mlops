@@ -7,6 +7,7 @@ usage:
   MODEL_RUN_ID=<run_id> python -m scripts.export_model
   MODEL_RUN_ID=<run_id> EXPORT_DIR=build/model python -m scripts.export_model
 """
+
 from __future__ import annotations
 
 import logging

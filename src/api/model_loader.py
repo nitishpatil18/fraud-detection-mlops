@@ -4,6 +4,7 @@ in dev we load from mlflow (lets us swap runs with one env var).
 in production we load from a local folder baked into the docker image,
 so the deployed service has no runtime dependency on mlflow.
 """
+
 from __future__ import annotations
 
 import json
@@ -42,7 +43,9 @@ class FraudModel:
         self.feature_names: list[str] = list(booster.feature_names or [])
         log.info(
             "FraudModel ready: run_id=%s, features=%d, mappings=%d",
-            run_id, len(self.feature_names), len(self.mappings),
+            run_id,
+            len(self.feature_names),
+            len(self.mappings),
         )
 
     def _prepare_row(self, payload: dict[str, Any]) -> pd.DataFrame:
@@ -121,6 +124,4 @@ def load_from_env() -> FraudModel:
         tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
         return _load_from_mlflow(run_id, tracking_uri, threshold)
 
-    raise RuntimeError(
-        "set either MODEL_LOCAL_DIR (prod) or MODEL_RUN_ID (dev) env var"
-    )
+    raise RuntimeError("set either MODEL_LOCAL_DIR (prod) or MODEL_RUN_ID (dev) env var")
