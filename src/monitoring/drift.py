@@ -5,16 +5,17 @@ usage:
   python -m src.monitoring.drift --hours 24
   python -m src.monitoring.drift --sample 5000
 """
+
 from __future__ import annotations
 
 import argparse
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-from evidently.report import Report
 from evidently.metric_preset import DataDriftPreset, DataQualityPreset
+from evidently.report import Report
 from sqlalchemy import select
 
 from src.config import PROCESSED_DIR, TARGET_COL
@@ -43,7 +44,7 @@ def load_current(
     has the same encoded-int representation as the reference parquet.
     """
     init_db()
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
     with session_scope() as s:
         q = (
@@ -55,8 +56,7 @@ def load_current(
 
     if not rows:
         raise RuntimeError(
-            f"no predictions in the last {hours} hours. "
-            "run some /predict calls first."
+            f"no predictions in the last {hours} hours. " "run some /predict calls first."
         )
 
     records = [r.features for r in rows]
@@ -64,6 +64,7 @@ def load_current(
 
     # encode categoricals using the model's mappings (strings -> ints)
     from src.features import apply_category_mappings
+
     df = apply_category_mappings(df, mappings)
 
     if sample is not None and len(df) > sample:
@@ -73,7 +74,8 @@ def load_current(
 
 
 def align_columns(
-    reference: pd.DataFrame, current: pd.DataFrame,
+    reference: pd.DataFrame,
+    current: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """make sure both frames have the same columns in the same order.
 
@@ -91,7 +93,8 @@ def align_columns(
     if empty_in_current:
         log.info(
             "dropping %d columns that are fully null in current (e.g. %s)",
-            len(empty_in_current), empty_in_current[:5],
+            len(empty_in_current),
+            empty_in_current[:5],
         )
         reference = reference.drop(columns=empty_in_current)
         current = current.drop(columns=empty_in_current)
@@ -124,6 +127,7 @@ def main() -> None:
 
     log.info("loading category mappings")
     from src.features import load_mappings
+
     mappings = load_mappings(PROCESSED_DIR / "category_mappings.json")
 
     log.info("loading reference (training) data")
@@ -148,16 +152,16 @@ def main() -> None:
     report.save_html(str(html_path))
 
     result = report.as_dict()
-    drift_metric = next(
-        m for m in result["metrics"] if m["metric"] == "DatasetDriftMetric"
-    )
+    drift_metric = next(m for m in result["metrics"] if m["metric"] == "DatasetDriftMetric")
     drifted = drift_metric["result"]["number_of_drifted_columns"]
     total = drift_metric["result"]["number_of_columns"]
     drift_share = drift_metric["result"]["share_of_drifted_columns"]
 
     log.info(
         "drift summary: %d/%d columns drifted (%.1f%%)",
-        drifted, total, drift_share * 100,
+        drifted,
+        total,
+        drift_share * 100,
     )
     log.info("report saved: %s", html_path)
 

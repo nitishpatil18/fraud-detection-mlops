@@ -3,6 +3,7 @@
 uses fastapi's TestClient, which runs the app in-process without a real
 server. we patch the model loader so tests don't need mlflow running.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -22,6 +23,7 @@ def client():
 
     with patch("src.api.main.load_from_env", return_value=fake_model):
         from src.api.main import app
+
         with TestClient(app) as c:
             yield c
 
@@ -58,9 +60,12 @@ def test_predict_negative_amount_rejected(client) -> None:
 
 
 def test_predict_accepts_extra_fields(client) -> None:
-    r = client.post("/predict", json={
-        "TransactionAmt": 50.0,
-        "C1": 1.0,
-        "V100": 0.5,
-    })
+    r = client.post(
+        "/predict",
+        json={
+            "TransactionAmt": 50.0,
+            "C1": 1.0,
+            "V100": 0.5,
+        },
+    )
     assert r.status_code == 200

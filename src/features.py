@@ -1,4 +1,5 @@
 """feature engineering for fraud detection."""
+
 from __future__ import annotations
 
 import json
@@ -29,9 +30,7 @@ def identify_column_types(x: pd.DataFrame) -> tuple[list[str], list[str]]:
     return numeric_cols, categorical_cols
 
 
-def fit_category_mappings(
-    x_train: pd.DataFrame, cat_cols: list[str]
-) -> dict[str, dict[str, int]]:
+def fit_category_mappings(x_train: pd.DataFrame, cat_cols: list[str]) -> dict[str, dict[str, int]]:
     """learn a value->int mapping for each categorical column from train only."""
     mappings: dict[str, dict[str, int]] = {}
     for col in cat_cols:
@@ -40,18 +39,14 @@ def fit_category_mappings(
     return mappings
 
 
-def apply_category_mappings(
-    x: pd.DataFrame, mappings: dict[str, dict[str, int]]
-) -> pd.DataFrame:
+def apply_category_mappings(x: pd.DataFrame, mappings: dict[str, dict[str, int]]) -> pd.DataFrame:
     """encode categorical cols using pre-fit mappings. unseen/nan -> -1."""
     x = x.copy()
     for col, mapping in mappings.items():
         if col not in x.columns:
             x[col] = -1
             continue
-        x[col] = (
-            x[col].astype("string").map(mapping).fillna(-1).astype(np.int32)
-        )
+        x[col] = x[col].astype("string").map(mapping).fillna(-1).astype(np.int32)
     return x
 
 

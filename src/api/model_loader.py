@@ -1,4 +1,5 @@
 """loads a trained model and its category mappings from mlflow."""
+
 from __future__ import annotations
 
 import json
@@ -47,9 +48,7 @@ class FraudModel:
                 artifact_path="category_mappings.json",
                 dst_path=tmp,
             )
-            self.mappings: dict[str, dict[str, int]] = json.loads(
-                Path(path).read_text()
-            )
+            self.mappings: dict[str, dict[str, int]] = json.loads(Path(path).read_text())
         log.info("loaded %d category mappings", len(self.mappings))
 
         # the model knows what features it was trained on and their order
@@ -92,11 +91,7 @@ def load_from_env() -> FraudModel:
     """read run id and tracking uri from env vars, with sensible defaults."""
     run_id = os.environ.get("MODEL_RUN_ID")
     if not run_id:
-        raise RuntimeError(
-            "MODEL_RUN_ID env var not set. set it to a valid mlflow run id."
-        )
-    tracking_uri = os.environ.get(
-        "MLFLOW_TRACKING_URI", "http://127.0.0.1:5000"
-    )
+        raise RuntimeError("MODEL_RUN_ID env var not set. set it to a valid mlflow run id.")
+    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     threshold = float(os.environ.get("DECISION_THRESHOLD", "0.5"))
     return FraudModel(run_id=run_id, tracking_uri=tracking_uri, threshold=threshold)

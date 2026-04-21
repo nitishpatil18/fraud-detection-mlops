@@ -1,10 +1,11 @@
 """database engine and helpers for writing prediction logs."""
+
 from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -73,13 +74,15 @@ def write_prediction_log(
     """insert one prediction log row. swallows errors so serving never breaks."""
     try:
         with session_scope() as s:
-            s.add(PredictionLog(
-                model_run_id=model_run_id,
-                features=features,
-                fraud_probability=fraud_probability,
-                is_fraud=is_fraud,
-                threshold=threshold,
-                latency_ms=latency_ms,
-            ))
+            s.add(
+                PredictionLog(
+                    model_run_id=model_run_id,
+                    features=features,
+                    fraud_probability=fraud_probability,
+                    is_fraud=is_fraud,
+                    threshold=threshold,
+                    latency_ms=latency_ms,
+                )
+            )
     except Exception:
         log.exception("failed to write prediction log")

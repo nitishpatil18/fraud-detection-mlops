@@ -1,8 +1,8 @@
 """data loading and time-based splitting."""
+
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 import pandas as pd
 
@@ -51,9 +51,7 @@ def time_split(
     val = df_sorted.iloc[val_start:test_start].copy()
     test = df_sorted.iloc[test_start:].copy()
 
-    log.info(
-        "split sizes: train=%d val=%d test=%d", len(train), len(val), len(test)
-    )
+    log.info("split sizes: train=%d val=%d test=%d", len(train), len(val), len(test))
     log.info(
         "fraud rates: train=%.4f val=%.4f test=%.4f",
         train[TARGET_COL].mean(),

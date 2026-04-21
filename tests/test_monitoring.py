@@ -2,6 +2,7 @@
 
 uses an in-memory sqlite db so no real postgres is needed.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import create_engine, select
@@ -17,14 +18,16 @@ def test_schema_round_trip() -> None:
     session_factory = sessionmaker(bind=engine)
 
     with session_factory() as s:
-        s.add(PredictionLog(
-            model_run_id="abc123",
-            features={"TransactionAmt": 50.0, "ProductCD": "W"},
-            fraud_probability=0.23,
-            is_fraud=False,
-            threshold=0.5,
-            latency_ms=4.2,
-        ))
+        s.add(
+            PredictionLog(
+                model_run_id="abc123",
+                features={"TransactionAmt": 50.0, "ProductCD": "W"},
+                fraud_probability=0.23,
+                is_fraud=False,
+                threshold=0.5,
+                latency_ms=4.2,
+            )
+        )
         s.commit()
 
     with session_factory() as s:

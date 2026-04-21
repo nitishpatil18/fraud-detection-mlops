@@ -1,0 +1,32 @@
+name: docker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # lets you trigger manually from the actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: set up docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: fraud-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: smoke test the image
+        run: |
+          docker run --rm fraud-api:ci python -c "from src.api.main import app; print('app imports ok')"

@@ -3,6 +3,7 @@
 run this whenever the raw data changes. training reads the parquet files,
 not the raw csvs, so it's fast and reproducible.
 """
+
 from __future__ import annotations
 
 import logging
@@ -31,8 +32,7 @@ def save_split(x: pd.DataFrame, y: pd.Series, path: Path) -> None:
     df = x.copy()
     df[TARGET_COL] = y.values
     df.to_parquet(path, compression="snappy", index=False)
-    log.info("saved %s (shape=%s, size=%.1fMB)",
-             path.name, df.shape, path.stat().st_size / 1e6)
+    log.info("saved %s (shape=%s, size=%.1fMB)", path.name, df.shape, path.stat().st_size / 1e6)
 
 
 def main() -> None:

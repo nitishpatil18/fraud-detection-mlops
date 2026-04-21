@@ -1,7 +1,6 @@
 """pydantic schemas for the fraud detection api."""
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,7 +15,9 @@ class TransactionRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     TransactionAmt: float | None = Field(
-        default=None, description="transaction amount in usd", ge=0,
+        default=None,
+        description="transaction amount in usd",
+        ge=0,
     )
     ProductCD: str | None = Field(default=None, description="product code")
     card1: float | None = None
@@ -37,7 +38,9 @@ class PredictionResponse(BaseModel):
     """response from /predict."""
 
     fraud_probability: float = Field(
-        description="probability of fraud, in [0, 1]", ge=0, le=1,
+        description="probability of fraud, in [0, 1]",
+        ge=0,
+        le=1,
     )
     is_fraud: bool = Field(
         description="model decision at the configured threshold",

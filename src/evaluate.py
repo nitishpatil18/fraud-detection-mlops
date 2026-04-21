@@ -1,13 +1,14 @@
 """evaluation metrics for fraud detection."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 import numpy as np
 from sklearn.metrics import (
     average_precision_score,
-    roc_auc_score,
     precision_recall_curve,
+    roc_auc_score,
 )
 
 
@@ -22,9 +23,7 @@ class Metrics:
         return asdict(self)
 
 
-def recall_at_precision(
-    y_true: np.ndarray, y_score: np.ndarray, target_precision: float
-) -> float:
+def recall_at_precision(y_true: np.ndarray, y_score: np.ndarray, target_precision: float) -> float:
     """highest recall achievable while precision >= target_precision.
 
     returns 0.0 if the target precision is never reached.

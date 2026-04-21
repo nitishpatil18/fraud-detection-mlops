@@ -5,6 +5,7 @@ usage:
   python scripts/generate_traffic.py --n 1000         # 1000 predictions
   python scripts/generate_traffic.py --n 500 --drift  # inject synthetic drift
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,8 +17,6 @@ import httpx
 import numpy as np
 import pandas as pd
 
-from src.config import PROCESSED_DIR, TARGET_COL
-
 log = logging.getLogger(__name__)
 
 API_URL = "http://127.0.0.1:8000/predict"
@@ -25,13 +24,30 @@ API_URL = "http://127.0.0.1:8000/predict"
 # a reasonable subset of fields to send - realistic production callers
 # rarely have all 431 features
 FIELDS_TO_SEND = [
-    "TransactionAmt", "ProductCD",
-    "card1", "card2", "card3", "card4", "card5", "card6",
-    "addr1", "addr2", "P_emaildomain", "R_emaildomain",
-    "DeviceType", "DeviceInfo",
-    "C1", "C2", "C13", "C14",
-    "D1", "D2", "D15",
-    "V95", "V96", "V97",
+    "TransactionAmt",
+    "ProductCD",
+    "card1",
+    "card2",
+    "card3",
+    "card4",
+    "card5",
+    "card6",
+    "addr1",
+    "addr2",
+    "P_emaildomain",
+    "R_emaildomain",
+    "DeviceType",
+    "DeviceInfo",
+    "C1",
+    "C2",
+    "C13",
+    "C14",
+    "D1",
+    "D2",
+    "D15",
+    "V95",
+    "V96",
+    "V97",
 ]
 
 
@@ -43,6 +59,7 @@ def load_sample_transactions(n: int) -> pd.DataFrame:
     has everything encoded to ints, so we load raw here.
     """
     from src.config import RAW_TXN_PATH
+
     df = pd.read_csv(RAW_TXN_PATH, nrows=50000)
     return df.sample(n=n, random_state=random.randint(0, 10000))
 
@@ -63,9 +80,9 @@ def row_to_payload(row: pd.Series) -> dict:
         if field in row and pd.notna(row[field]):
             val = row[field]
             # json doesn't like numpy types
-            if isinstance(val, (np.integer, np.int32, np.int64)):
+            if isinstance(val, np.integer | np.int32 | np.int64):
                 val = int(val)
-            elif isinstance(val, (np.floating, np.float32, np.float64)):
+            elif isinstance(val, np.floating | np.float32 | np.float64):
                 val = float(val)
             payload[field] = val
     return payload
@@ -82,7 +99,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=500)
     parser.add_argument(
-        "--drift", action="store_true", help="inject synthetic drift",
+        "--drift",
+        action="store_true",
+        help="inject synthetic drift",
     )
     args = parser.parse_args()
 
@@ -111,7 +130,10 @@ def main() -> None:
     elapsed = time.perf_counter() - start
     log.info(
         "done. %d requests in %.1fs (%.1f rps), %d flagged as fraud",
-        args.n, elapsed, args.n / elapsed, fraud_count,
+        args.n,
+        elapsed,
+        args.n / elapsed,
+        fraud_count,
     )
 
 

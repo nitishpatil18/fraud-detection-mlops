@@ -1,4 +1,5 @@
 """train xgboost on pre-built features, log to mlflow."""
+
 from __future__ import annotations
 
 import logging
@@ -65,12 +66,14 @@ def main(cfg: DictConfig) -> None:
         x_val, y_val = load_split("val")
         x_test, y_test = load_split("test")
 
-        mlflow.log_params({
-            "n_train": len(x_train),
-            "n_val": len(x_val),
-            "n_test": len(x_test),
-            "n_features": x_train.shape[1],
-        })
+        mlflow.log_params(
+            {
+                "n_train": len(x_train),
+                "n_val": len(x_val),
+                "n_test": len(x_test),
+                "n_features": x_train.shape[1],
+            }
+        )
 
         model = train_xgb(x_train, y_train, x_val, y_val, params=dict(cfg.model))
         mlflow.log_metric("best_iteration", model.best_iteration)

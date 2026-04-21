@@ -1,4 +1,5 @@
 """fastapi app for fraud detection inference."""
+
 from __future__ import annotations
 
 import logging
@@ -79,7 +80,8 @@ def info() -> InfoResponse:
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(
-    request: TransactionRequest, background: BackgroundTasks,
+    request: TransactionRequest,
+    background: BackgroundTasks,
 ) -> PredictionResponse:
     model = _get_model()
     payload: dict[str, Any] = request.model_dump(exclude_none=False)

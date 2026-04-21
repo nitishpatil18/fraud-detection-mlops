@@ -6,6 +6,7 @@ each row = one /predict call. stores:
 - what was sent in (features as json)
 - what came out (probability, decision)
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -24,7 +25,9 @@ class PredictionLog(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     ts: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, index=True,
+        DateTime(timezone=True),
+        default=datetime.utcnow,
+        index=True,
     )
     model_run_id: Mapped[str] = mapped_column(String(64), index=True)
     features: Mapped[dict[str, Any]] = mapped_column(JSON)
