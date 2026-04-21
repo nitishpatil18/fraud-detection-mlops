@@ -6,6 +6,7 @@ services:
   - type: web
     name: fraud-api
     runtime: docker
+    dockerfilePath: ./Dockerfile.prod
     plan: free
     region: singapore
     branch: main
@@ -13,7 +14,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        sync: false  # set manually in dashboard, contains password
+        sync: false
       - key: DECISION_THRESHOLD
         value: "0.5"
       - key: MODEL_LOCAL_DIR
