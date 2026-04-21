@@ -1,5 +1,8 @@
 # fraud detection mlops
 
+[![ci](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/ci.yml)
+[![docker](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/docker.yml/badge.svg)](https://github.com/nitishpatil18/fraud-detection-mlops/actions/workflows/docker.yml)
+
 end-to-end machine learning system for credit card fraud detection on the ieee-cis dataset.
 
 ## stack
