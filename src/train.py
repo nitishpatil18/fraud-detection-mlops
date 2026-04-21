@@ -1,27 +1,31 @@
-"""train a baseline xgboost model with mlflow tracking and hydra config."""
+"""train xgboost on pre-built features, log to mlflow."""
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 
 import hydra
 import mlflow
 import mlflow.xgboost
+import pandas as pd
 import xgboost as xgb
 from omegaconf import DictConfig, OmegaConf
 
-from src.config import RANDOM_SEED
-from src.data import load_raw, time_split
+from src.config import PROCESSED_DIR, RANDOM_SEED, TARGET_COL
 from src.evaluate import compute_metrics
-from src.features import build_features
 
 log = logging.getLogger(__name__)
 
 
-def train_xgb(
-    x_train, y_train, x_val, y_val, params: dict,
-) -> xgb.XGBClassifier:
-    """train xgboost with early stopping on validation set."""
+def load_split(name: str) -> tuple[pd.DataFrame, pd.Series]:
+    """load a parquet split and separate features from target."""
+    df = pd.read_parquet(PROCESSED_DIR / f"{name}.parquet")
+    y = df[TARGET_COL]
+    x = df.drop(columns=[TARGET_COL])
+    log.info("loaded %s: x=%s y_mean=%.4f", name, x.shape, y.mean())
+    return x, y
+
+
+def train_xgb(x_train, y_train, x_val, y_val, params: dict) -> xgb.XGBClassifier:
     pos = int(y_train.sum())
     neg = int(len(y_train) - pos)
     scale_pos_weight = neg / max(pos, 1)
@@ -55,21 +59,11 @@ def main(cfg: DictConfig) -> None:
     with mlflow.start_run(run_name=cfg.run_name) as run:
         log.info("mlflow run_id: %s", run.info.run_id)
 
-        # log hyperparameters
         mlflow.log_params(dict(cfg.model))
-        mlflow.log_params({
-            "val_frac": cfg.split.val_frac,
-            "test_frac": cfg.split.test_frac,
-        })
 
-        # data prep
-        df = load_raw()
-        train, val, test = time_split(
-            df, val_frac=cfg.split.val_frac, test_frac=cfg.split.test_frac,
-        )
-        x_train, y_train, x_val, y_val, x_test, y_test = build_features(
-            train, val, test,
-        )
+        x_train, y_train = load_split("train")
+        x_val, y_val = load_split("val")
+        x_test, y_test = load_split("test")
 
         mlflow.log_params({
             "n_train": len(x_train),
@@ -78,17 +72,14 @@ def main(cfg: DictConfig) -> None:
             "n_features": x_train.shape[1],
         })
 
-        # train
         model = train_xgb(x_train, y_train, x_val, y_val, params=dict(cfg.model))
         mlflow.log_metric("best_iteration", model.best_iteration)
 
-        # evaluate
         val_pred = model.predict_proba(x_val)[:, 1]
         test_pred = model.predict_proba(x_test)[:, 1]
         val_metrics = compute_metrics(y_val.to_numpy(), val_pred)
         test_metrics = compute_metrics(y_test.to_numpy(), test_pred)
 
-        # log metrics with val_/test_ prefix so they're comparable in the ui
         for k, v in val_metrics.to_dict().items():
             mlflow.log_metric(f"val_{k}", v)
         for k, v in test_metrics.to_dict().items():
@@ -97,7 +88,10 @@ def main(cfg: DictConfig) -> None:
         log.info("val metrics: %s", val_metrics.to_dict())
         log.info("test metrics: %s", test_metrics.to_dict())
 
-        # log model as artifact
+        # also log the category mappings file as an artifact, so the model
+        # run is self-contained (model + mappings always go together).
+        mlflow.log_artifact(str(PROCESSED_DIR / "category_mappings.json"))
+
         mlflow.xgboost.log_model(model, artifact_path="model")
         log.info("model logged to mlflow")
 

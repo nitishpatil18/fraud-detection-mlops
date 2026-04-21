@@ -1,7 +1,9 @@
-"""feature engineering for fraud detection baseline."""
+"""feature engineering for fraud detection."""
 from __future__ import annotations
 
+import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -27,77 +29,38 @@ def identify_column_types(x: pd.DataFrame) -> tuple[list[str], list[str]]:
     return numeric_cols, categorical_cols
 
 
-def encode_categoricals(
-    x_train: pd.DataFrame,
-    x_val: pd.DataFrame,
-    x_test: pd.DataFrame,
-    cat_cols: list[str],
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """label-encode categorical columns using train values only.
-
-    fit on train: each unique value gets an int code. unseen values in val/test
-    get -1. nans get -1 too. this matches what a real pipeline does (you only
-    see training-time categories at fit time).
-    """
-    x_train = x_train.copy()
-    x_val = x_val.copy()
-    x_test = x_test.copy()
-
+def fit_category_mappings(
+    x_train: pd.DataFrame, cat_cols: list[str]
+) -> dict[str, dict[str, int]]:
+    """learn a value->int mapping for each categorical column from train only."""
+    mappings: dict[str, dict[str, int]] = {}
     for col in cat_cols:
-        train_vals = x_train[col].astype("string")
-        unique_vals = train_vals.dropna().unique()
-        mapping = {v: i for i, v in enumerate(unique_vals)}
-
-        def encode(s: pd.Series) -> pd.Series:
-            return (
-                s.astype("string")
-                .map(mapping)
-                .fillna(-1)
-                .astype(np.int32)
-            )
-
-        x_train[col] = encode(x_train[col])
-        x_val[col] = encode(x_val[col])
-        x_test[col] = encode(x_test[col])
-
-    return x_train, x_val, x_test
+        unique_vals = x_train[col].astype("string").dropna().unique()
+        mappings[col] = {str(v): i for i, v in enumerate(unique_vals)}
+    return mappings
 
 
-def build_features(
-    train: pd.DataFrame,
-    val: pd.DataFrame,
-    test: pd.DataFrame,
-) -> tuple[
-    pd.DataFrame, pd.Series,
-    pd.DataFrame, pd.Series,
-    pd.DataFrame, pd.Series,
-]:
-    """full feature pipeline: split x/y, identify types, encode categoricals."""
-    x_train, y_train = split_x_y(train)
-    x_val, y_val = split_x_y(val)
-    x_test, y_test = split_x_y(test)
-
-    num_cols, cat_cols = identify_column_types(x_train)
-    log.info(
-        "feature counts: numeric=%d categorical=%d", len(num_cols), len(cat_cols)
-    )
-
-    x_train, x_val, x_test = encode_categoricals(x_train, x_val, x_test, cat_cols)
-
-    log.info(
-        "final shapes: train=%s val=%s test=%s",
-        x_train.shape, x_val.shape, x_test.shape,
-    )
-    return x_train, y_train, x_val, y_val, x_test, y_test
+def apply_category_mappings(
+    x: pd.DataFrame, mappings: dict[str, dict[str, int]]
+) -> pd.DataFrame:
+    """encode categorical cols using pre-fit mappings. unseen/nan -> -1."""
+    x = x.copy()
+    for col, mapping in mappings.items():
+        if col not in x.columns:
+            x[col] = -1
+            continue
+        x[col] = (
+            x[col].astype("string").map(mapping).fillna(-1).astype(np.int32)
+        )
+    return x
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    from src.data import load_raw, time_split
+def save_mappings(mappings: dict[str, dict[str, int]], path: Path) -> None:
+    """write mappings to json for reuse at inference time."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(mappings, indent=2))
+    log.info("saved mappings to %s", path)
 
-    df = load_raw()
-    train, val, test = time_split(df)
-    x_train, y_train, x_val, y_val, x_test, y_test = build_features(train, val, test)
-    print("\nsanity check:")
-    print("x_train dtypes sample:", x_train.dtypes.value_counts().to_dict())
-    print("y_train positive rate:", y_train.mean())
+
+def load_mappings(path: Path) -> dict[str, dict[str, int]]:
+    return json.loads(path.read_text())
