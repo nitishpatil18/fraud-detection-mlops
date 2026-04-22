@@ -1,0 +1,45 @@
+name: drift-check
+
+# runs every day at 02:00 utc. adjust cron as needed.
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:  # also allow manual trigger from UI
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: install system deps
+        run: sudo apt-get update && sudo apt-get install -y libgomp1
+
+      - name: install python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: run drift check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python -m scripts.check_drift --hours 24 --threshold 0.3
+
+      # when drift is detected, this step runs only because the previous step failed.
+      # swap with slack webhook, email, pagerduty, or whatever the team uses.
+      - name: alert on failure
+        if: failure()
+        run: |
+          echo "drift detected. in production this step would:"
+          echo "  - send slack webhook"
+          echo "  - create pagerduty incident"
+          echo "  - trigger retraining pipeline"
