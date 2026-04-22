@@ -19,7 +19,8 @@ import pandas as pd
 
 log = logging.getLogger(__name__)
 
-API_URL = "http://127.0.0.1:8000/predict"
+import os
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000/predict")
 
 # a reasonable subset of fields to send - realistic production callers
 # rarely have all 431 features
