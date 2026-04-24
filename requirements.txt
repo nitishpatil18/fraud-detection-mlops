@@ -17,3 +17,4 @@ httpx==0.28.1
 psycopg[binary]==3.2.3
 sqlalchemy==2.0.36
 evidently==0.4.40
+streamlit==1.41.1
