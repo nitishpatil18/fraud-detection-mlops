@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from src.api.model_loader import FraudModel, load_from_env
 from src.api.schemas import (
@@ -65,6 +65,11 @@ def health() -> HealthResponse:
         status="ok",
         model_loaded=STATE["model"] is not None,
     )
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/info", response_model=InfoResponse)
