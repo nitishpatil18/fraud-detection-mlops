@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import random
 import time
 
@@ -19,7 +20,7 @@ import pandas as pd
 
 log = logging.getLogger(__name__)
 
-import os
+
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000/predict")
 
 # a reasonable subset of fields to send - realistic production callers

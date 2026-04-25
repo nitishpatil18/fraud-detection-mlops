@@ -7,6 +7,7 @@ usage:
   DATABASE_URL=... python -m scripts.check_drift
   DATABASE_URL=... python -m scripts.check_drift --hours 24 --threshold 0.3
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,9 +38,7 @@ def check_drift(hours: int, sample: int, threshold: float) -> int:
 
     report = build_report(reference, current)
     result = report.as_dict()
-    drift_metric = next(
-        m for m in result["metrics"] if m["metric"] == "DatasetDriftMetric"
-    )
+    drift_metric = next(m for m in result["metrics"] if m["metric"] == "DatasetDriftMetric")
     drift_share = drift_metric["result"]["share_of_drifted_columns"]
     drifted = drift_metric["result"]["number_of_drifted_columns"]
     total = drift_metric["result"]["number_of_columns"]
@@ -62,7 +61,9 @@ def main() -> None:
     parser.add_argument("--hours", type=int, default=24)
     parser.add_argument("--sample", type=int, default=5000)
     parser.add_argument(
-        "--threshold", type=float, default=0.3,
+        "--threshold",
+        type=float,
+        default=0.3,
         help="drift share above which to alert (0.3 = 30%)",
     )
     args = parser.parse_args()
